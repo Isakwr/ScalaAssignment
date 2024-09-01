@@ -1,0 +1,21 @@
+// PuzzleSolver.pseudocode
+
+// main function to control the flow of the program
+PuzzleSolver.main(args):
+  if the number of arguments provided is not 2:
+    print usage instructions
+    exit the program
+
+  get inputFile and outputFile from arguments
+
+  // read all puzzles from the input file
+  puzzles = PuzzleReaderWriter.readPuzzles(inputFile)
+
+  // solve each puzzle and collect the solutions
+  solutions = []
+  for each puzzle in puzzles:
+    solution = Puzzle.solve(puzzle)
+    add solution to solutions list
+
+  // write all the solutions to the output file
+  PuzzleReaderWriter.writeSolution(outputFile, solutions)

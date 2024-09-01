@@ -1,0 +1,39 @@
+// PuzzleReaderWriter.pseudocode
+
+// read puzzles from a file and convert them into a list of Puzzle objects
+PuzzleReaderWriter.readPuzzles(filename):
+  open the file specified by filename
+  read all lines from the file
+  close the file
+
+  initialize an empty list for puzzles
+  set index i to 0
+
+  read the first line to determine the number of puzzles
+  print the number of puzzles
+
+  while there are more lines to read:
+    read the next line for the puzzle size (width and height)
+    print the puzzle size
+
+    read the next line for the column clues
+    store these clues in columnClues
+
+    initialize a 2D array for the grid based on the puzzle size
+    initialize an empty list for row clues
+
+    for each row in the puzzle:
+      read the row of the grid and the clue for that row
+      store the grid characters and the row clue
+
+    add the Puzzle to the list of puzzles
+
+  return the list of puzzles
+
+// write the list of solutions to a file
+PuzzleReaderWriter.writeSolution(filename, solutions):
+  open the file specified by filename for writing
+  for each solution in the list:
+    write the solution to the file as a string
+    write a blank line between solutions
+  close the file

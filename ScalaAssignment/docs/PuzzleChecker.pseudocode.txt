@@ -1,0 +1,23 @@
+// PuzzleChecker.pseudocode
+
+// check whether any row or column hints call for a full, complete row or column,
+// in which every block contains a track piece
+PuzzleChecker.checkFullRowsAndColumns(puzzle):
+  // initialize empty lists to store rows and columns that require full tracks
+  fullRows = []
+  fullColumns = []
+
+  // iterate over each row in the puzzle
+  For each rowIndex in range(puzzle.size.height):
+    // if the row clue matches the width of the puzzle, it's a full row
+    if puzzle.rowClues[rowIndex] == puzzle.size.width:
+      add rowIndex to fullRows
+
+  // iterate over each column in the puzzle
+  for each columnIndex in range(puzzle.size.width):
+    // if the column clue matches the height of the puzzle, it's a full column.
+    if puzzle.columnClues[columnIndex] == puzzle.size.height:
+      add columnIndex to fullColumns
+
+  // return the list of full rows and columns.
+  return (fullRows, fullColumns)

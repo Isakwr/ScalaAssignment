@@ -1,0 +1,30 @@
+// Puzzle.pseudocode
+
+// define a structure for the puzzle, including the grid, size, row clues, and column clues
+Puzzle:
+  Fields:
+    size: tuple of two integers (width, height)
+    grid: 2D array of characters representing the puzzle grid
+    rowClues: list of integers representing the clues for each row
+    columnClues: list of integers representing the clues for each column
+
+// provide a method to solve the puzzle by filling empty squares with random numbers
+Puzzle.solve(puzzle):
+  initialize random number generator
+  create new grid by iterating over each row in puzzle.grid:
+    for each cell in the row:
+      if cell is empty ('_'):
+        replace with a random number between 1 and puzzle.width
+      otherwise, leave the cell unchanged
+  return Solution with the new grid
+
+// define a structure for the solution, which includes the solved grid
+Solution:
+  Fields:
+    grid: 2D array of characters representing the solved puzzle grid
+
+  method to convert the solution grid into a string for output
+  Solution.toString():
+    convert each row of grid to a string
+    combine all rows into a single string with newline separators
+

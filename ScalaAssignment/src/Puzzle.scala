@@ -23,16 +23,32 @@ case class Puzzle(
 object Puzzle {
   // solve method that that fills empty squares with random numbers
   def solve(puzzle: Puzzle): Solution = {
-    val (width, height) = puzzle.size
-    val random = new Random()
-
     // creates a new grid with the solved puzzle
-    val solvedGrid = puzzle.grid.map(row =>
-      row.map {
-        case '_' => (random.nextInt(width) + 1).toString.charAt(0) // replace '_' with a random number
-        case ch => ch                                  // leave other characters unchanged
+    val solvedGrid = puzzle.grid.map(_.clone()) // create copy of the grid to modify
+
+    // fill full rows with placeholder ╬ symbols
+    for (rowIdx <- solvedGrid.indices) {
+      if (PuzzleChecker.isFullRow(puzzle, rowIdx)) {
+        for (colIdx <- solvedGrid(rowIdx).indices) {
+          if (solvedGrid(rowIdx)(colIdx) == '_') {
+            solvedGrid(rowIdx)(colIdx) = '╬'
+            println(s"Replacing _ with ╬ at column $colIdx row $rowIdx")
+          }
+        }
       }
-    )
+    }
+
+    // fill complete rows with placeholder ╬ symbols
+    for (colIdx <- solvedGrid.head.indices) {
+      if (PuzzleChecker.isFullColumn(puzzle, colIdx)) {
+        for (rowIdx <- solvedGrid.indices) {
+          if (solvedGrid(rowIdx)(colIdx) == '_') {
+            solvedGrid(rowIdx)(colIdx) = '╬'
+            println(s"Replacing _ with ╬ at column $colIdx row $rowIdx")
+          }
+        }
+      }
+    }
 
     Solution(solvedGrid)
   }
