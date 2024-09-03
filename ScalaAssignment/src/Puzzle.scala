@@ -1,57 +1,110 @@
 // Puzzle.scala
 
-// The puzzle structure represents a static snapshot of the grid and clues, which do not change
-// after they are initialized. Once the puzzle is set up, the solver works with the fixed clues
-// and grid structure to derive a solution. Since the puzzle itself doesn't need to be modified
-// during solving (only the solution changes), immutability is a natural fit. It seems more
-// logical, then to use a case class here, rather than a basic class, since it provides
-// immutability by default, as well as built-in functionalities that will be helpful for
-// modeling  the fixed data of the puzzle.
+object Direction extends Enumeration {
+  val Left, Up, Right, Down = Value
+}
 
-// definition of Puzzle case class, including fields for the grid, clues, etc.
+case class Block (
+                 state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
+                 paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
+                 ) {
+  def updatedBlockState(trackExists: Int): Block = {
+    copy(state = Some(trackExists))
+  }
 
-import scala.util.Random
+  def updatePath(direction: Direction.Value, pathExists: Int): Block = {
+    copy(paths = paths.updated(direction, Some(pathExists)))
+  }
+
+  def isFullyKnown: Boolean = state.isDefined && paths.values.forall(_.isDefined)
+
+  override def toString: String = {
+    val blockState = state.map {
+      case 1 => "1"
+      case 0 => "0"
+      case _ => "?"
+    }.getOrElse("?")
+
+    val pathState = paths.map {
+      case (Direction.Left, Some(1)) => "<-"
+      case (Direction.Right, Some(1)) => "->"
+      case (Direction.Up, Some(1)) => "^"
+      case (Direction.Down, Some(1)) => "v"
+      case _ => "_"
+    }.mkString(" ")
+
+    s"Block: $blockState, Paths: $pathState"
+  }
+}
+
+object Block {
+  def apply(): Block = new Block(
+    state = None,
+    paths = Map(
+      Direction.Left -> None,
+      Direction.Up -> None,
+      Direction.Right -> None,
+      Direction.Down -> None
+    )
+  )
+}
 
 case class Puzzle(
                  size: (Int, Int),         // (width, height) of the puzzle
-                 grid: Array[Array[Char]],  // 2D array representing the grid
+                 grid: Array[Array[Block]],  // 2D array representing the grid
                  rowClues: List[Int],       // clues for each row
                  columnClues: List[Int]     // clues for each column
                  )
 
 // companion object to provide utility methods related to Puzzle
 object Puzzle {
-  // solve method that that fills empty squares with random numbers
+  
+  def fillFullRow(puzzle: Puzzle, rowIndex: Int): Puzzle = {
+    val newGrid = puzzle.grid.map(_.clone()) // create a copy of the grid to modify
+    
+    for (colIdx <- newGrid(rowIndex).indices) {
+      newGrid(rowIndex)(colIdx) = newGrid(rowIndex)(colIdx).updatedBlockState(1)
+    }
+    
+    puzzle.copy(grid = newGrid)
+  }
+  
+  def fillFullColumn(puzzle: Puzzle, colIndex: Int): Puzzle = {
+    val newGrid = puzzle.grid.map(_.clone()) // create a copy of the grid to modify
+    
+    for (rowIdx <- newGrid.indices) {
+      newGrid(rowIdx)(colIndex) = newGrid(rowIdx)(colIndex).updatedBlockState(1)
+    }
+
+    puzzle.copy(grid = newGrid)
+  }
+  
   def solve(puzzle: Puzzle): Solution = {
-    // creates a new grid with the solved puzzle
-    val solvedGrid = puzzle.grid.map(_.clone()) // create copy of the grid to modify
-
-    // fill full rows with placeholder ╬ symbols
-    for (rowIdx <- solvedGrid.indices) {
-      if (PuzzleChecker.isFullRow(puzzle, rowIdx)) {
-        for (colIdx <- solvedGrid(rowIdx).indices) {
-          if (solvedGrid(rowIdx)(colIdx) == '_') {
-            solvedGrid(rowIdx)(colIdx) = '╬'
-            println(s"Replacing _ with ╬ at column $colIdx row $rowIdx")
-          }
-        }
+    var updatedPuzzle = puzzle
+    
+    // fill full rows with track pieces
+    for (rowIndex <- puzzle.grid.indices) {
+      if (PuzzleChecker.isFullRow(puzzle, rowIndex)) {
+        println(s"Filling row $rowIndex with track pieces")
+        updatedPuzzle = fillFullRow(updatedPuzzle, rowIndex)
       }
     }
-
-    // fill complete rows with placeholder ╬ symbols
-    for (colIdx <- solvedGrid.head.indices) {
-      if (PuzzleChecker.isFullColumn(puzzle, colIdx)) {
-        for (rowIdx <- solvedGrid.indices) {
-          if (solvedGrid(rowIdx)(colIdx) == '_') {
-            solvedGrid(rowIdx)(colIdx) = '╬'
-            println(s"Replacing _ with ╬ at column $colIdx row $rowIdx")
-          }
-        }
+    
+    // fill full columns with track pieces
+    for (colIndex <- puzzle.grid.head.indices) {
+      if (PuzzleChecker.isFullColumn(puzzle, colIndex)) {
+        println(s"Filling column $colIndex with track pieces")
+        updatedPuzzle = fillFullColumn(updatedPuzzle, colIndex)
       }
     }
+    
+    // remaining solving logic
 
+    // create Solution object based on the updated puzzle grid
+    val solvedGrid = updatedPuzzle.grid.map(_.map(_.state.getOrElse(0).toString.charAt(0)))
     Solution(solvedGrid)
   }
+  
 }
 
 // solution case class to represent a Solution to a Puzzle
