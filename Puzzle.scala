@@ -1,3 +1,4 @@
+import PuzzleChecker.{markNonTracksRows, markNonTracksColumns}
 // Puzzle.scala
 
 object Direction extends Enumeration {
@@ -5,7 +6,7 @@ object Direction extends Enumeration {
 }
 
 case class Block (
-                 state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
+                 var state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
                  paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
                  ) {
   def updatedBlockState(trackExists: Int): Block = {
@@ -72,8 +73,7 @@ object Puzzle {
   def fillFullColumn(puzzle: Puzzle, colIndex: Int): Puzzle = {
     val newGrid = puzzle.grid.map(_.clone()) // create a copy of the grid to modify
     
-    for (rowIdx <- newGrid.indices) {
-      if(newGrid(rowIdx)(colIndex).state.contains(None))
+    for (rowIdx <- newGrid(colIndex).indices) {
       newGrid(rowIdx)(colIndex) = newGrid(rowIdx)(colIndex).updatedBlockState(1)
     }
 
@@ -98,6 +98,9 @@ object Puzzle {
         updatedPuzzle = fillFullColumn(updatedPuzzle, colIndex)
       }
     }
+
+    updatedPuzzle = markNonTracksRows(updatedPuzzle)
+    updatedPuzzle = markNonTracksColumns(updatedPuzzle)
     
     // remaining solving logic
 
