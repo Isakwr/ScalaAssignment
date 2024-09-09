@@ -3,8 +3,8 @@
 @main
 def main(): Unit = {
 
-    val inputFile = "C:/Users/isakw/ikt212/ScalaAssignment/input.txt"
-    val outputFile = "C:/Users/isakw/ikt212/ScalaAssignment/output.txt"
+    val inputFile = "C:/Users/naibm/ikt212/ScalaAssignment/input.txt"
+    val outputFile = "C:/Users/naibm/ikt212/ScalaAssignment/output.txt"
     
     // read all puzzles from the input file
     val puzzles = PuzzleReaderWriter.readPuzzles(inputFile)

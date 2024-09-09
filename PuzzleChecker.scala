@@ -9,6 +9,8 @@ object PuzzleChecker {
     width == clue // check if the width matches the clue
   }
 
+  
+  
   def extendParts(puzzle: Puzzle): Puzzle = {
     for((row, rowIndex) <- puzzle.grid.zipWithIndex){
       for((block, colIndex) <- row.zipWithIndex){
