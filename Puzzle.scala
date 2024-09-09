@@ -1,4 +1,4 @@
-import PuzzleChecker.{markNonTracksRows, markNonTracksColumns}
+import PuzzleChecker.{extendParts, markNonTracksColumns, markNonTracksRows}
 // Puzzle.scala
 
 object Direction extends Enumeration {
@@ -7,7 +7,7 @@ object Direction extends Enumeration {
 
 case class Block (
                  var state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
-                 paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
+                 var paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
                  ) {
   def updatedBlockState(trackExists: Int): Block = {
     copy(state = Some(trackExists))
@@ -99,9 +99,11 @@ object Puzzle {
       }
     }
 
+    updatedPuzzle = extendParts(updatedPuzzle)
     updatedPuzzle = markNonTracksRows(updatedPuzzle)
     updatedPuzzle = markNonTracksColumns(updatedPuzzle)
-    
+
+
     // remaining solving logic
 
     // create Solution object based on the updated puzzle grid
