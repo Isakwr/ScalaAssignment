@@ -9,7 +9,21 @@ object PuzzleChecker {
     width == clue // check if the width matches the clue
   }
 
+  def printMatrixWithCoordinatesAndState(puzzle: Puzzle): Unit = {
+    for ((row, rowIndex) <- puzzle.grid.zipWithIndex) {
+      for ((block, colIndex) <- row.zipWithIndex) {
+        // Get the state value or use '?' if state is None
+        val stateValue = block.state.map(_.toString).getOrElse("?")
+        // Print the coordinates and state for each block
+        print(s"($rowIndex, $colIndex: $stateValue) ")
+      }
+      // Print a newline after each row
+      println()
+    }
+  }
+
   def extendParts(puzzle: Puzzle): Puzzle = {
+    printMatrixWithCoordinatesAndState(puzzle)
     for((row, rowIndex) <- puzzle.grid.zipWithIndex){
       for((block, colIndex) <- row.zipWithIndex){
         val neighbours = List(
@@ -18,55 +32,38 @@ object PuzzleChecker {
           (rowIndex, colIndex - 1), // Left
           (rowIndex, colIndex + 1)  // Right
         )
-        for(adj <- neighbours){
-          val neighbourblock = puzzle.grid(adj._1)(adj._2)
-          if(!inBounds(adj._1, adj._2, puzzle.size._1, puzzle.size._2)){
-            if(adj._1 == rowIndex - 1){
-              if(neighbourblock.paths(Direction.Down).contains(1)) {
-                block.state = Some(1)
-                block.paths = Map(
-                  Direction.Left -> None,
-                  Direction.Up -> Some(1),
-                  Direction.Right -> None,
-                  Direction.Down -> None
-                )
+        for(adj <- neighbours) {
+          if (inBounds(adj._1, adj._2, puzzle.size._1, puzzle.size._2)){
+            val neighbourblock = puzzle.grid(adj._1)(adj._2)
+            //println(s"Looking Block: ($rowIndex, $colIndex)")
+            //println("neighbour: " + s"(${adj._1}, ${adj._2} ) has state: ${puzzle.grid(adj._1)(adj._2).state}")
+            if(neighbourblock.state.contains(1)) {
+              if (adj._1 == rowIndex - 1) {
+                if (neighbourblock.paths(Direction.Down).contains(1)) {
+                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
+                  block.state = Some(1)
+                }
               }
-            }
-            if (adj._2 == colIndex - 1) {
-              if(neighbourblock.paths(Direction.Right).contains(1)){
-                block.state = Some(1)
-                block.paths = Map(
-                  Direction.Left -> Some(1),
-                  Direction.Up -> None,
-                  Direction.Right -> None,
-                  Direction.Down -> None
-                )
-              }
+              else if (adj._2 == colIndex - 1) {
+                if (neighbourblock.paths(Direction.Right).contains(1)) {
+                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
+                  block.state = Some(1)
+                }
 
-            }
-            if (adj._1 == rowIndex + 1) {
-              if(neighbourblock.paths(Direction.Up).contains(1)){
-                block.state = Some(1)
-                block.paths = Map(
-                  Direction.Left -> None,
-                  Direction.Up -> None,
-                  Direction.Right -> None,
-                  Direction.Down -> Some(1)
-                )
               }
+              else if (adj._1 == rowIndex + 1) {
+                if (neighbourblock.paths(Direction.Up).contains(1)) {
+                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
+                  block.state = Some(1)
+                }
 
-            }
-            if (adj._2 == colIndex + 1) {
-              if(neighbourblock.paths(Direction.Left).contains(1)){
-                block.state = Some(1)
-                block.paths = Map(
-                  Direction.Left -> None,
-                  Direction.Up -> None,
-                  Direction.Right -> Some(1),
-                  Direction.Down -> None
-                )
               }
-
+              else if (adj._2 == colIndex + 1) {
+                if (neighbourblock.paths(Direction.Left).contains(1)) {
+                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
+                  block.state = Some(1)
+                }
+              }
             }
           }
         }

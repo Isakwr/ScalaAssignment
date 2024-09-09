@@ -100,8 +100,9 @@ object Puzzle {
     }
 
     updatedPuzzle = extendParts(updatedPuzzle)
-    updatedPuzzle = markNonTracksRows(updatedPuzzle)
-    updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+    //updatedPuzzle = markNonTracksRows(updatedPuzzle)
+    //updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+
 
 
     // remaining solving logic
