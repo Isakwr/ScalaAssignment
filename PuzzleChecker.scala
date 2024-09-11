@@ -24,46 +24,39 @@ object PuzzleChecker {
 
   def extendParts(puzzle: Puzzle): Puzzle = {
     printMatrixWithCoordinatesAndState(puzzle)
-    for((row, rowIndex) <- puzzle.grid.zipWithIndex){
-      for((block, colIndex) <- row.zipWithIndex){
-        val neighbours = List(
-          (rowIndex - 1, colIndex), // Up
-          (rowIndex + 1, colIndex), // Down
-          (rowIndex, colIndex - 1), // Left
-          (rowIndex, colIndex + 1)  // Right
-        )
-        for(adj <- neighbours) {
-          if (inBounds(adj._1, adj._2, puzzle.size._1, puzzle.size._2)){
-            val neighbourblock = puzzle.grid(adj._1)(adj._2)
-            //println(s"Looking Block: ($rowIndex, $colIndex)")
-            //println("neighbour: " + s"(${adj._1}, ${adj._2} ) has state: ${puzzle.grid(adj._1)(adj._2).state}")
-            if(neighbourblock.state.contains(1)) {
-              if (adj._1 == rowIndex - 1) {
-                if (neighbourblock.paths(Direction.Down).contains(1)) {
-                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
-                  block.state = Some(1)
-                }
-              }
-              else if (adj._2 == colIndex - 1) {
-                if (neighbourblock.paths(Direction.Right).contains(1)) {
-                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
-                  block.state = Some(1)
-                }
-
-              }
-              else if (adj._1 == rowIndex + 1) {
-                if (neighbourblock.paths(Direction.Up).contains(1)) {
-                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
-                  block.state = Some(1)
-                }
-
-              }
-              else if (adj._2 == colIndex + 1) {
-                if (neighbourblock.paths(Direction.Left).contains(1)) {
-                  //println("setting block: " + "(" + adj._1 + "," + adj._2 + ")" + "to 1")
-                  block.state = Some(1)
-                }
-              }
+    for((row, rowIndex) <- puzzle.grid.zipWithIndex) {
+      for ((block, colIndex) <- row.zipWithIndex) {
+        //If the block is a track with a path
+        val pathCount = block.paths.values.count{
+          case Some(1) => true
+          case _ => false
+        }
+        if(block.state.contains(1) && pathCount == 2){
+          //place block at each path direction
+          if(block.paths(Direction.Left).contains(1)){
+            //check if neighbour is in bounds, if true, give them state = Some(1)
+            if(inBounds(rowIndex, colIndex-1, puzzle.size._1, puzzle.size._2)){
+              println(s" 0 - block: (${rowIndex},${colIndex}) setting (${rowIndex},${colIndex-1})")
+              puzzle.grid(rowIndex)(colIndex-1).state = Some(1)
+            }
+          }
+          if (block.paths(Direction.Up).contains(1)) {
+            if (inBounds(rowIndex-1, colIndex, puzzle.size._1, puzzle.size._2)) {
+              println(s" 1 - block: (${rowIndex},${colIndex}) setting (${rowIndex-1} ${colIndex})")
+              println(puzzle.grid(rowIndex)(colIndex).paths)
+              puzzle.grid(rowIndex-1)(colIndex).state = Some(1)
+            }
+          }
+          if (block.paths(Direction.Right).contains(1)) {
+            if (inBounds(rowIndex, colIndex + 1, puzzle.size._1, puzzle.size._2)) {
+              println(s" 2 - block: (${rowIndex},${colIndex}) setting (${rowIndex},${colIndex+1})")
+              puzzle.grid(rowIndex)(colIndex + 1).state = Some(1)
+            }
+          }
+          if (block.paths(Direction.Down).contains(1)) {
+            if (inBounds(rowIndex + 1, colIndex, puzzle.size._1, puzzle.size._2)) {
+              println(s" 3- block: (${rowIndex},${colIndex}) setting (${rowIndex+1},${colIndex})")
+              puzzle.grid(rowIndex + 1)(colIndex).state = Some(1)
             }
           }
         }

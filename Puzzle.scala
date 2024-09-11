@@ -98,10 +98,10 @@ object Puzzle {
         updatedPuzzle = fillFullColumn(updatedPuzzle, colIndex)
       }
     }
-
+    updatedPuzzle = markNonTracksRows(updatedPuzzle)
+    updatedPuzzle = markNonTracksColumns(updatedPuzzle)
     updatedPuzzle = extendParts(updatedPuzzle)
-    //updatedPuzzle = markNonTracksRows(updatedPuzzle)
-    //updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+
 
 
 
