@@ -1,3 +1,4 @@
+
 // PuzzleChecker.scala
 
 object PuzzleChecker {
@@ -121,3 +122,4 @@ object PuzzleChecker {
     height == clue // check if the number of filled blocks matches the clue
   }
 }
+

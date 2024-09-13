@@ -222,3 +222,6 @@ case class Solution(grid: Array[Array[Char]]) {
   override def toString: String =
     grid.map(_.mkString(" ")).mkString("\n")
 }
+
+
+
