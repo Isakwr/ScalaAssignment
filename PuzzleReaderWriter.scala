@@ -55,26 +55,26 @@ object PuzzleReaderWriter {
             case '╔' => Block(state = Some(1), paths = Map(
               Direction.Left -> Some(0),
               Direction.Right -> Some(1),
-              Direction.Up -> Some(1),
-              Direction.Down -> Some(0)
+              Direction.Up -> Some(0),
+              Direction.Down -> Some(1)
             ))
             case '╗' => Block(state = Some(1), paths = Map(
               Direction.Left -> Some(1),
               Direction.Right -> Some(0),
-              Direction.Up -> Some(1),
-              Direction.Down -> Some(0)
+              Direction.Up -> Some(0),
+              Direction.Down -> Some(1)
             ))
             case '╚' => Block(state = Some(1), paths = Map(
               Direction.Left -> Some(0),
               Direction.Right -> Some(1),
-              Direction.Up -> Some(0),
-              Direction.Down -> Some(1)
+              Direction.Up -> Some(1),
+              Direction.Down -> Some(0)
             ))
             case '╝' => Block(state = Some(1), paths = Map(
               Direction.Left -> Some(1),
               Direction.Right -> Some(0),
-              Direction.Up -> Some(0),
-              Direction.Down -> Some(1)
+              Direction.Up -> Some(1),
+              Direction.Down -> Some(0)
             ))
             case '1' => Block(state = Some(1), paths = Map(
               Direction.Left -> None,
