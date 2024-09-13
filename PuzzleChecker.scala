@@ -21,6 +21,28 @@ object PuzzleChecker {
       println()
     }
   }
+  
+  def completeRow(puzzle: Puzzle): Puzzle = {
+    for ((row, rowIndex) <- puzzle.grid.zipWithIndex) {
+      val noBlockrow: Int = row.count(block => {
+        block.state.contains('N')
+      })
+      println(s"row: ${rowIndex} has ${noBlockrow} no track blocks")
+      if (puzzle.size._1 - noBlockrow == puzzle.rowClues(rowIndex)) {
+        for (block <- row) {
+          if (!block.state.contains('N')) {
+            block.state = Some(1)
+          }
+        }
+      }
+    }
+    puzzle
+  }
+  
+  
+  
+  
+  
 
   def extendParts(puzzle: Puzzle): Puzzle = {
     printMatrixWithCoordinatesAndState(puzzle)

@@ -1,4 +1,4 @@
-import PuzzleChecker.{extendParts, markNonTracksColumns, markNonTracksRows}
+import PuzzleChecker.{completeRow, extendParts, markNonTracksColumns, markNonTracksRows}
 // Puzzle.scala
 
 object Direction extends Enumeration {
@@ -54,12 +54,13 @@ case class Puzzle(
                  size: (Int, Int),         // (width, height) of the puzzle
                  grid: Array[Array[Block]],  // 2D array representing the grid
                  rowClues: List[Int],        // clues for each row
-                 columnClues: List[Int]     // clues for each column
+                 columnClues: List[Int],     // clues for each column
                  )
 
 // companion object to provide utility methods related to Puzzle
 object Puzzle {
-  
+
+
   def fillFullRow(puzzle: Puzzle, rowIndex: Int): Puzzle = {
     val newGrid = puzzle.grid.map(_.clone()) // create a copy of the grid to modify
     
@@ -82,7 +83,9 @@ object Puzzle {
   
   def solve(puzzle: Puzzle): Solution = {
     var updatedPuzzle = puzzle
-    
+
+
+
     // fill full rows with track pieces
     for (rowIndex <- puzzle.grid.indices) {
       if (PuzzleChecker.isFullRow(puzzle, rowIndex)) {
@@ -90,7 +93,7 @@ object Puzzle {
         updatedPuzzle = fillFullRow(updatedPuzzle, rowIndex)
       }
     }
-    
+
     // fill full columns with track pieces
     for (colIndex <- puzzle.grid.head.indices) {
       if (PuzzleChecker.isFullColumn(puzzle, colIndex)) {
@@ -100,10 +103,17 @@ object Puzzle {
     }
     updatedPuzzle = markNonTracksRows(updatedPuzzle)
     updatedPuzzle = markNonTracksColumns(updatedPuzzle)
-    updatedPuzzle = extendParts(updatedPuzzle)
 
 
 
+    for(i <- 0 until 15){
+      updatedPuzzle = markNonTracksRows(updatedPuzzle)
+      updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+      updatedPuzzle = extendParts(updatedPuzzle)
+      updatedPuzzle = markNonTracksRows(updatedPuzzle)
+      updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+      updatedPuzzle = completeRow(updatedPuzzle)
+    }
 
     // remaining solving logic
 
