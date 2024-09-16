@@ -1,15 +1,13 @@
 import PuzzleChecker.{completeRow, extendParts, markNonTracksColumns, markNonTracksRows}
 
-// Puzzle.scala
-
 object Direction extends Enumeration {
   val Left, Up, Right, Down = Value
 }
 
-case class Block (
-                   var state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
-                   var paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
-                 ) {
+case class Block(
+                  var state: Option[Int], // None for unknown, Some(1) for track, Some(0) for no track
+                  var paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
+                ) {
   def updatedBlockState(trackExists: Int): Block = {
     copy(state = Some(trackExists))
   }
@@ -56,10 +54,10 @@ object Block {
 }
 
 case class Puzzle(
-                   size: (Int, Int),         // (width, height) of the puzzle
-                   grid: Array[Array[Block]],  // 2D array representing the grid
-                   rowClues: List[Int],        // clues for each row
-                   columnClues: List[Int],     // clues for each column
+                   size: (Int, Int), // (width, height) of the puzzle
+                   grid: Array[Array[Block]], // 2D array representing the grid
+                   rowClues: List[Int], // clues for each row
+                   columnClues: List[Int] // clues for each column
                  ) {
   def deepCopy(): Puzzle = {
     val newGrid = grid.map(_.map(_.copy()))
@@ -81,6 +79,40 @@ case class Puzzle(
 }
 
 object Puzzle {
+
+  def initializePuzzle(puzzle: Puzzle): Puzzle = {
+    val newGrid = puzzle.grid.map(_.clone())
+
+    // Initialize specific symbols with correct paths
+    for (rowIndex <- newGrid.indices) {
+      for (colIndex <- newGrid(rowIndex).indices) {
+        puzzle.grid(rowIndex)(colIndex) = puzzle.grid(rowIndex)(colIndex) match {
+          case block if block.state.isEmpty => Block()
+          case block => symbolToBlock(block, rowIndex, colIndex)
+        }
+      }
+    }
+
+    puzzle.copy(grid = newGrid)
+  }
+
+  def symbolToBlock(block: Block, rowIndex: Int, colIndex: Int): Block = {
+    block.state match {
+      case Some(1) =>
+        block.toString match {
+          case s if s.contains("╗") =>
+            block.updatePath(Direction.Left, 1).updatePath(Direction.Down, 1)
+          case s if s.contains("╝") =>
+            block.updatePath(Direction.Left, 1).updatePath(Direction.Up, 1)
+          case s if s.contains("╔") =>
+            block.updatePath(Direction.Right, 1).updatePath(Direction.Down, 1)
+          case s if s.contains("╚") =>
+            block.updatePath(Direction.Right, 1).updatePath(Direction.Up, 1)
+          case _ => block
+        }
+      case _ => block
+    }
+  }
 
   def fillFullRow(puzzle: Puzzle, rowIndex: Int): Puzzle = {
     val newGrid = puzzle.grid.map(_.clone()) // create a copy of the grid to modify
@@ -176,7 +208,7 @@ object Puzzle {
   }
 
   def solve(puzzle: Puzzle): Solution = {
-    var updatedPuzzle = puzzle
+    var updatedPuzzle = initializePuzzle(puzzle)
 
     // Apply initial simple rules
     for (rowIndex <- puzzle.grid.indices) {
@@ -216,12 +248,9 @@ object Puzzle {
 
 }
 
-// solution case class to represent a Solution to a Puzzle
+// Solution case class to represent a Solution to a Puzzle
 case class Solution(grid: Array[Array[Char]]) {
-  // convert the grid to a string for output
+  // Convert the grid to a string for output
   override def toString: String =
     grid.map(_.mkString(" ")).mkString("\n")
 }
-
-
-
