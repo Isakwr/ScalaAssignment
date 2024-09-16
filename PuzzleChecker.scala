@@ -21,16 +21,16 @@ object PuzzleChecker {
       println()
     }
   }
-  
+
   def completeRow(puzzle: Puzzle): Puzzle = {
     for ((row, rowIndex) <- puzzle.grid.zipWithIndex) {
       val noBlockrow: Int = row.count(block => {
-        block.state.contains('N')
+        block.state.contains(0)
       })
       println(s"row: ${rowIndex} has ${noBlockrow} no track blocks")
       if (puzzle.size._1 - noBlockrow == puzzle.rowClues(rowIndex)) {
         for (block <- row) {
-          if (!block.state.contains('N')) {
+          if (!block.state.contains(0)) {
             block.state = Some(1)
           }
         }
@@ -38,6 +38,80 @@ object PuzzleChecker {
     }
     puzzle
   }
+
+  def fillCorner(puzzle: Puzzle): Puzzle = {
+    //loop through rows
+    for((row, rowIndex) <- puzzle.grid.zipWithIndex){
+      //loop through each block in row
+      for((block, columnIndex) <- row.zipWithIndex){
+
+        //check if available block neighbours is equal to 2
+        //if a block has 2 neighbours with value Some(0) or Some(1) - with direction not into the block
+        if(block.state.contains(1)) {
+          if (rowIndex == 0 && columnIndex == 0) {
+            puzzle.grid(rowIndex)(columnIndex+1).state = Some(1)
+            puzzle.grid(rowIndex+1)(columnIndex).state = Some(1)
+          }
+          if (rowIndex == 0 && columnIndex == puzzle.size._2-1) {
+            puzzle.grid(rowIndex)(columnIndex-1).state = Some(1)
+            puzzle.grid(rowIndex+1)(columnIndex).state = Some(1)
+          }
+          if (rowIndex == puzzle.size._1-1 && columnIndex == 0) {
+            puzzle.grid(rowIndex-1)(columnIndex).state = Some(1)
+            puzzle.grid(rowIndex)(columnIndex+1).state = Some(1)
+          }
+          if (rowIndex == puzzle.size._1-1 && columnIndex == puzzle.size._2-1) {
+            puzzle.grid(rowIndex-1)(columnIndex).state = Some(1)
+            puzzle.grid(rowIndex)(columnIndex-1).state = Some(1)
+          }
+
+
+
+          val neighbours: Array[(Int, Int)] = Array(
+            (rowIndex, columnIndex - 1), //left
+            (rowIndex - 1, columnIndex), //Up
+            (rowIndex, columnIndex + 1), //Right
+            (rowIndex + 1, columnIndex), //Down
+          )
+          val directed: Boolean = false
+          val count: Int = neighbours.count(neigh => {
+            if(inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+              puzzle.grid(neigh._1)(neigh._2).state.contains(0)
+            }else
+              false
+          })
+
+
+          //if block is on boundary of matrix
+          if(isOnBoundary(block, rowIndex, columnIndex, puzzle)){
+            if(count == 1){
+              for(neigh <- neighbours){
+                if(inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)){
+                  if(!puzzle.grid(neigh._1)(neigh._2).state.contains(0)){
+                    puzzle.grid(neigh._1)(neigh._2).state = Some(1)
+                  }
+                }
+              }
+            }
+          }
+            // else the block will not be on boundary of matrix
+          else {
+            if(count == 2){
+              for (neigh <- neighbours) {
+                if (!puzzle.grid(neigh._1)(neigh._2).state.contains(0)) {
+                  puzzle.grid(neigh._1)(neigh._2).state = Some(1)
+                }
+
+              }
+            }
+          }
+        }
+      }
+    }
+    puzzle
+  }
+
+
   
   
   
@@ -105,7 +179,7 @@ object PuzzleChecker {
         row.foreach((element) => {
 
           if(!element.state.contains(1)){
-            element.state = Some('N')
+            element.state = Some(0)
           }
         })
       }
@@ -130,7 +204,7 @@ object PuzzleChecker {
       if(elem >= puzzle.columnClues(i)){
         puzzle.grid.foreach((row) => {
           if(!row(i).state.contains(1)){
-            row(i).state = Some('N')
+            row(i).state = Some(0)
           }
         })
       }
