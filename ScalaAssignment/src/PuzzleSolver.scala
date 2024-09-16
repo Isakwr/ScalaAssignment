@@ -8,25 +8,26 @@ object PuzzleSolver {
     }
 
     val inputFile = args(0)
-    val outputFile = args(1)
-    
+
+    // check if the output file path is absolute or relative
+    val outputFile = if (args(1).startsWith("C:")) {
+      args(1) // it's already an absolute path so just use it
+    } else {
+      s"C:/Users/evanm/ikt212g24h/assignments/solutions/ScalaAssignment/resources/${args(1)}"
+    }
+
     // read all puzzles from the input file
     val puzzles = PuzzleReaderWriter.readPuzzles(inputFile)
 
     // solve each puzzle and gather the solutions
     val solutions = puzzles.map { puzzle =>
-      for (rowIndex <- puzzle.grid.indices) {
-        if (PuzzleChecker.isFullRow(puzzle, rowIndex)) {
-          println(s"Row $rowIndex is complete!")
-        }
-      }
-
       for (colIndex <- puzzle.grid.head.indices) {
         if (PuzzleChecker.isFullColumn(puzzle, colIndex)) {
           println(s"Column $colIndex is complete!")
         }
       }
 
+      // solve the puzzle
       Puzzle.solve(puzzle)
     }
 

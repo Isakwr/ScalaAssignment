@@ -4,10 +4,48 @@ object Direction extends Enumeration {
   val Left, Up, Right, Down = Value
 }
 
+// define the TrackType trait and its case objects, for directional track pieces
+sealed trait TrackType {
+  def symbol: Char
+  def connects: Set[Direction.Value]
+}
+
+case object Horizontal extends TrackType {
+  val symbol = '═'
+  val connects = Set(Direction.Left, Direction.Right)
+}
+
+case object Vertical extends TrackType {
+  val symbol = '║'
+  val connects = Set(Direction.Up, Direction.Down)
+}
+
+case object CurveDownRight extends TrackType {
+  val symbol = '╔'
+  val connects = Set(Direction.Down, Direction.Right)
+}
+
+case object CurveDownLeft extends TrackType {
+  val symbol = '╗'
+  val connects = Set(Direction.Down, Direction.Left)
+}
+
+case object CurveUpRight extends TrackType {
+  val symbol = '╚'
+  val connects = Set(Direction.Up, Direction.Right)
+}
+
+case object CurveUpLeft extends TrackType {
+  val symbol = '╝'
+  val connects = Set(Direction.Up, Direction.Left)
+}
+
 case class Block (
-                 state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
-                 paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
+                 state: Option[Int], // none for unknown, Some(1) for track, Some(0) for no track
+                 paths: Map[Direction.Value, Option[Int]], // map of paths with binary representation
+                 possibleTracks: Set[TrackType]
                  ) {
+  // this method will modify the state of a single block without modifying `paths` or `possibleTracks`
   def updatedBlockState(trackExists: Int): Block = {
     copy(state = Some(trackExists))
   }
@@ -45,6 +83,10 @@ object Block {
       Direction.Up -> None,
       Direction.Right -> None,
       Direction.Down -> None
+    ),
+    possibleTracks = Set(
+      Horizontal, Vertical, CurveDownRight, CurveDownLeft, CurveUpRight,
+      CurveUpLeft
     )
   )
 }
@@ -78,11 +120,11 @@ object Puzzle {
 
     puzzle.copy(grid = newGrid)
   }
-  
-  def solve(puzzle: Puzzle): Solution = {
+
+  def fillFullRowsAndColumns(puzzle: Puzzle): Puzzle = {
     var updatedPuzzle = puzzle
-    
-    // fill full rows with track pieces
+
+    // fill full rows with default track pieces
     for (rowIndex <- puzzle.grid.indices) {
       if (PuzzleChecker.isFullRow(puzzle, rowIndex)) {
         println(s"Filling row $rowIndex with track pieces")
@@ -90,7 +132,7 @@ object Puzzle {
       }
     }
     
-    // fill full columns with track pieces
+    // fill full columns with default track pieces
     for (colIndex <- puzzle.grid.head.indices) {
       if (PuzzleChecker.isFullColumn(puzzle, colIndex)) {
         println(s"Filling column $colIndex with track pieces")
@@ -98,10 +140,65 @@ object Puzzle {
       }
     }
     
-    // remaining solving logic
-
+    updatedPuzzle
+  }
+  
+  // this method will iterate over the entire puzzle and update multiple block instances based on their `possibleTracks`
+  def updateBlockStates(puzzle: Puzzle): Puzzle = {
+    val newGrid = puzzle.grid.map(_.clone())
+    
+    for ((row, rowIndex) <- puzzle.grid.zipWithIndex) {
+      for ((block, colIndex) <- row.zipWithIndex if block.state.isEmpty) {
+        if (block.possibleTracks.size == 1) {
+          val trackType = block.possibleTracks.head
+          val newPaths = Direction.values.map { dir =>
+            dir -> Some(if (trackType.connects.contains(dir)) 1 else 0)
+          }.toMap
+          newGrid(rowIndex)(colIndex) = block.copy(state = Some(1), paths = newPaths)
+        } else if (block.possibleTracks.isEmpty) {
+          // if there are no possible tracks, the block must not contain a track
+          newGrid(rowIndex)(colIndex) = block.copy(state = Some(0))
+        }
+      }
+    }
+    
+    puzzle.copy(grid = newGrid)
+  }
+  
+  def solve(puzzle: Puzzle): Solution = {
+    var updatedPuzzle = puzzle
+    var progress = true
+    
+    while (progress) {
+      val beforeState = updatedPuzzle.grid.map(_.map(_.state))
+      
+      // apply methods
+      updatedPuzzle = fillFullRowsAndColumns(updatedPuzzle)
+      updatedPuzzle = markNonTracksRows(updatedPuzzle)
+      updatedPuzzle = markNonTracksColumns(updatedPuzzle)
+      updatedPuzzle = PuzzleChecker.updatePossibleTracks(updatedPuzzle)
+      updatedPuzzle = updateBlockStates(updatedPuzzle)
+      updatedPuzzle = PuzzleChecker.extendParts(updatedPuzzle)
+      updatedPuzzle = PuzzleChecker.enforceConnectivity(updatedPuzzle)
+      
+      val afterState = updatedPuzzle.grid.map(_.map(_.state))
+      progress = beforeState != afterState
+    }
+    
+    // check connectivity
+    if (!PuzzleChecker.isPathConnected(updatedPuzzle)) {
+      // handle case where path is not connected (backtracking?)
+    }
+    
     // create Solution object based on the updated puzzle grid
-    val solvedGrid = updatedPuzzle.grid.map(_.map(_.state.getOrElse(0).toString.charAt(0)))
+    val solvedGrid = updatedPuzzle.grid.map(_.map {
+      case Block(Some(1), _, possibleTracks) if possibleTracks.size == 1 =>
+        possibleTracks.head.symbol
+      case Block(Some(1), _, _) =>
+        '1' // unable to determine symbol
+      case Block(Some(0), _, _) => '0'
+      case _                    => '_'
+    })
     Solution(solvedGrid)
   }
   
