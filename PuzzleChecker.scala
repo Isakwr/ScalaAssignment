@@ -39,6 +39,39 @@ object PuzzleChecker {
     puzzle
   }
 
+  def completeColumn(puzzle: Puzzle): Puzzle = {
+    val numRows = puzzle.size._1
+    val numCols = puzzle.size._2
+
+
+    for (colIndex <- 0 until numCols) {
+      var noBlockCol: Int = 0
+
+      //Count the number of blocks in the column that have state Some(0)
+      for (rowIndex <- 0 until numRows) {
+        if (puzzle.grid(rowIndex)(colIndex).state.contains(0)) {
+          noBlockCol += 1
+        }
+      }
+
+      println(s"Column: ${colIndex} has ${noBlockCol} no track blocks")
+
+      //If the number of confirmed track pieces equals the column clue, complete the column
+      if (numRows - noBlockCol == puzzle.columnClues(colIndex)) {
+        for (rowIndex <- 0 until numRows) {
+          val block = puzzle.grid(rowIndex)(colIndex)
+          if (!block.state.contains(0)) {
+            block.state = Some(1)
+          }
+        }
+      }
+    }
+
+    puzzle
+  }
+
+
+
   def fillCorner(puzzle: Puzzle): Puzzle = {
     //loop through rows
     for((row, rowIndex) <- puzzle.grid.zipWithIndex){
@@ -47,61 +80,99 @@ object PuzzleChecker {
 
         //check if available block neighbours is equal to 2
         //if a block has 2 neighbours with value Some(0) or Some(1) - with direction not into the block
-        if(block.state.contains(1)) {
+        if(block.state.contains(1) && !block.isFullyKnown) {
           if (rowIndex == 0 && columnIndex == 0) {
             puzzle.grid(rowIndex)(columnIndex+1).state = Some(1)
             puzzle.grid(rowIndex+1)(columnIndex).state = Some(1)
           }
-          if (rowIndex == 0 && columnIndex == puzzle.size._2-1) {
+          else if (rowIndex == 0 && columnIndex == puzzle.size._2-1) {
             puzzle.grid(rowIndex)(columnIndex-1).state = Some(1)
             puzzle.grid(rowIndex+1)(columnIndex).state = Some(1)
           }
-          if (rowIndex == puzzle.size._1-1 && columnIndex == 0) {
+          else if (rowIndex == puzzle.size._1-1 && columnIndex == 0) {
             puzzle.grid(rowIndex-1)(columnIndex).state = Some(1)
             puzzle.grid(rowIndex)(columnIndex+1).state = Some(1)
           }
-          if (rowIndex == puzzle.size._1-1 && columnIndex == puzzle.size._2-1) {
+          else if (rowIndex == puzzle.size._1-1 && columnIndex == puzzle.size._2-1) {
             puzzle.grid(rowIndex-1)(columnIndex).state = Some(1)
             puzzle.grid(rowIndex)(columnIndex-1).state = Some(1)
-          }
+          }else {
+
+
+            val neighbours: Array[(Int, Int, Int)] = Array(
+              (rowIndex, columnIndex - 1, 0), //left
+              (rowIndex - 1, columnIndex, 1), //Up
+              (rowIndex, columnIndex + 1, 2), //Right
+              (rowIndex + 1, columnIndex, 3), //Down
+            )
+
+            // count number of no track neighbour blocks
+            val count: Int = neighbours.count(neigh => {
+              if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+                puzzle.grid(neigh._1)(neigh._2).state.contains(0)
+              } else
+                false
+            })
+            //var directedNeighbours = new Array[(Int, Int)](4)
+            //count number of fully known neighbour blocks
+            val dirNeighCount: Int = neighbours.count { neigh =>
+              if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+                if (puzzle.grid(neigh._1)(neigh._2).isFullyKnown) {
+                  //The left neighbor
+                  if (neigh._3 == 0) {
+                    puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(0)
+                  }
+                  //The top neighbor
+                  else if (neigh._3 == 1) {
+                    puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(0)
+                  }
+                  //The right neighbor
+                  else if (neigh._3 == 2) {
+                    puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(0)
+                  }
+                  //The bottom neighbor
+                  else if (neigh._3 == 3) {
+                    puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(0)
+                  }
+                  else {
+                    false
+                  }
+                } else {
+                  false
+                }
+              } else {
+                false
+              }
+            }
 
 
 
-          val neighbours: Array[(Int, Int)] = Array(
-            (rowIndex, columnIndex - 1), //left
-            (rowIndex - 1, columnIndex), //Up
-            (rowIndex, columnIndex + 1), //Right
-            (rowIndex + 1, columnIndex), //Down
-          )
-          val directed: Boolean = false
-          val count: Int = neighbours.count(neigh => {
-            if(inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
-              puzzle.grid(neigh._1)(neigh._2).state.contains(0)
-            }else
-              false
-          })
-
-
-          //if block is on boundary of matrix
-          if(isOnBoundary(block, rowIndex, columnIndex, puzzle)){
-            if(count == 1){
-              for(neigh <- neighbours){
-                if(inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)){
-                  if(!puzzle.grid(neigh._1)(neigh._2).state.contains(0)){
-                    puzzle.grid(neigh._1)(neigh._2).state = Some(1)
+            //if block is on boundary of matrix
+            if (isOnBoundary(block, rowIndex, columnIndex, puzzle)) {
+              //if block state is 1 check if neighbour Some(0) count is == 1 or neighbour Some(1) has different direction
+              if (count == 1 || dirNeighCount==1) {
+                for (neighbour <- neighbours) {
+                  if (inBounds(neighbour._1, neighbour._2, puzzle.size._1, puzzle.size._2)) {
+                    if (!puzzle.grid(neighbour._1)(neighbour._2).state.contains(0)) {
+                      puzzle.grid(neighbour._1)(neighbour._2).state = Some(1)
+                    }
                   }
                 }
               }
             }
-          }
             // else the block will not be on boundary of matrix
-          else {
-            if(count == 2){
-              for (neigh <- neighbours) {
-                if (!puzzle.grid(neigh._1)(neigh._2).state.contains(0)) {
-                  puzzle.grid(neigh._1)(neigh._2).state = Some(1)
+            else if(count == 2 || dirNeighCount == 2){
+              for (neighbour <- neighbours){
+                if(!puzzle.grid(neighbour._1)(neighbour._2).state.contains(0)){
+                  puzzle.grid(neighbour._1)(neighbour._2).state = Some(1)
                 }
-
+              }
+            }
+            else if (count == 1 && dirNeighCount == 1) {
+              for (neighbour <- neighbours) {
+                if (!puzzle.grid(neighbour._1)(neighbour._2).state.contains(0)) {
+                  puzzle.grid(neighbour._1)(neighbour._2).state = Some(1)
+                }
               }
             }
           }

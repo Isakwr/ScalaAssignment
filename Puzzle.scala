@@ -1,4 +1,4 @@
-import PuzzleChecker.{completeRow, extendParts, fillCorner, markNonTracksColumns, markNonTracksRows}
+import PuzzleChecker.{completeColumn, completeRow, extendParts, fillCorner, markNonTracksColumns, markNonTracksRows}
 // Puzzle.scala
 
 object Direction extends Enumeration {
@@ -113,6 +113,7 @@ object Puzzle {
       updatedPuzzle = markNonTracksRows(updatedPuzzle)
       updatedPuzzle = markNonTracksColumns(updatedPuzzle)
       updatedPuzzle = completeRow(updatedPuzzle)
+      updatedPuzzle = completeColumn(updatedPuzzle)
       updatedPuzzle = fillCorner(updatedPuzzle)
     }
 
