@@ -106,7 +106,7 @@ object Puzzle {
 
 
 
-    for(i <- 0 until 15){
+    for(i <- 0 until 30){
       updatedPuzzle = markNonTracksRows(updatedPuzzle)
       updatedPuzzle = markNonTracksColumns(updatedPuzzle)
       updatedPuzzle = extendParts(updatedPuzzle)
