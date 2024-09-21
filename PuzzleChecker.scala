@@ -182,63 +182,124 @@ object PuzzleChecker {
     puzzle
   }
 
+
+
   def connect(puzzle: Puzzle): Puzzle = {
     for((row, rowIndex) <- puzzle.grid.zipWithIndex){
-      for((block, columnIndex) <- row.zipWithIndex){
-        val neighbours: Array[(Int, Int, Int)] = Array(
-          (rowIndex, columnIndex - 1, 0), //left
-          (rowIndex - 1, columnIndex, 1), //Up
-          (rowIndex, columnIndex + 1, 2), //Right
-          (rowIndex + 1, columnIndex, 3), //Down
-        )
-        //count non pathable: some(0) or some(1) without exit to block
-        //count pathable: some(1) without direction or some(1) with exit to block
-        val notPathable: Int = 0
-        val pathable: Int = neighbours.count(neigh => {
-          if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
-            if (puzzle.grid(neigh._1)(neigh._2).state.contains(0)) {
-              false
-            } else if (puzzle.grid(neigh._1)(neigh._2).state.contains(1)) {
-              //check is path is know or not
-              if (puzzle.grid(neigh._1)(neigh._2).isFullyKnown) {
-                if (neigh._3 == 0 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(1)) {
-                  true
-                } else if (neigh._3 == 1 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(1)) {
-                  true
-                } else if (neigh._3 == 2 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(1)) {
-                  true
-                } else if (neigh._3 == 3 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(1)) {
-                  true
-                } else
-                  false
-              } else
-                true
-            } else
-              false
-          }else false
-        })
-        if(pathable == 2){
-          for(neigh <- neighbours) {
-            if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
-              if (neigh._3 == 0 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
-                block.updatePath(Direction.Left, 1)
-              }
-              if (neigh._3 == 1 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
-                block.updatePath(Direction.Up, 1)
-              }
-              if (neigh._3 == 2 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
-                block.updatePath(Direction.Right, 1)
-              }
-              if (neigh._3 == 3 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
-                block.updatePath(Direction.Down, 1)
-              }
+      for((block, columnIndex) <- row.zipWithIndex) {
+        if (!puzzle.grid(rowIndex)(columnIndex).isFullyKnown) {
+          val neighbours: Array[(Int, Int, Int)] = Array(
+            (rowIndex, columnIndex - 1, 0), //left
+            (rowIndex - 1, columnIndex, 1), //up
+            (rowIndex, columnIndex + 1, 2), //right
+            (rowIndex + 1, columnIndex, 3) //down
+          )
 
+          // Check for two neighbors exiting directly into the block
+          val neighborsExitingIntoBlock = neighbours.filter {
+            case (nRow, nCol, direction) if inBounds(nRow, nCol, puzzle.size._1, puzzle.size._2) =>
+              val neighborBlock = puzzle.grid(nRow)(nCol)
+              neighborBlock.state.contains(1) && neighborBlock.paths(direction match {
+                case 0 => Direction.Right
+                case 1 => Direction.Down
+                case 2 => Direction.Left
+                case 3 => Direction.Up
+              }).contains(1)
+            case _ => false
+          }
+
+          // If there are two neighbors with paths exiting into the block, connect to them
+          if (neighborsExitingIntoBlock.length == 2) {
+            var updatedBlock = block
+            for ((nRow, nCol, direction) <- neighborsExitingIntoBlock) {
+              direction match {
+                case 0 => updatedBlock = updatedBlock.updatePath(Direction.Left, 1)
+                case 1 => updatedBlock = updatedBlock.updatePath(Direction.Up, 1)
+                case 2 => updatedBlock = updatedBlock.updatePath(Direction.Right, 1)
+                case 3 => updatedBlock = updatedBlock.updatePath(Direction.Down, 1)
+              }
+              println(s"Forced connection for ${rowIndex},${columnIndex} in direction $direction")
             }
+            puzzle.grid(rowIndex)(columnIndex) = updatedBlock
+          }
+
+          val pathable: Int = neighbours.count(neigh => {
+            if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+              if (puzzle.grid(neigh._1)(neigh._2).state.contains(0)) {
+                false
+              } else if (puzzle.grid(neigh._1)(neigh._2).state.contains(1)) {
+                //check is path is know or not
+                if (puzzle.grid(neigh._1)(neigh._2).isFullyKnown) {
+                  if (neigh._3 == 0 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(1)) {
+                    true
+                  } else if (neigh._3 == 1 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(1)) {
+                    true
+                  } else if (neigh._3 == 2 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(1)) {
+                    true
+                  } else if (neigh._3 == 3 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(1)) {
+                    true
+                  } else
+                    false
+                } else
+                  true
+              } else
+                false
+            } else false
+          })
+
+          // Use a mutable variable to track the updated block
+          var updatedBlock = block
+
+          if (pathable == 2) {
+            for ((nRow, nCol, direction) <- neighbours) {
+              if (inBounds(nRow, nCol, puzzle.size._1, puzzle.size._2)) {
+                val neighborBlock = puzzle.grid(nRow)(nCol)
+                if (neighborBlock.isFullyKnown) {
+                  if (direction == 0 && neighborBlock.paths(Direction.Right).contains(1)) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Left, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to left 1")
+                  }
+                  else if (direction == 1 && neighborBlock.paths(Direction.Down).contains(1)) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Up, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to up 1")
+                  }
+                  else if (direction == 2 && neighborBlock.paths(Direction.Left).contains(1)) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Right, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to right 1")
+                  }
+                  else if (direction == 3 && neighborBlock.paths(Direction.Up).contains(1)) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Down, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to down 1")
+                  }
+                } else if (neighborBlock.state.contains(1)) {
+                  // Update based on neighbor state alone if not fully known
+                  if (direction == 0) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Left, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to left 1")
+                  }
+                  if (direction == 1) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Up, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to up 1")
+                  }
+                  if (direction == 2) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Right, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to right 1")
+                  }
+                  if (direction == 3) {
+                    updatedBlock = updatedBlock.updatePath(Direction.Down, 1)
+                    println(s"updated ${rowIndex},${columnIndex} to down 1")
+                  }
+                }
+              }
+            }
+
+            // Reassign the updated block back to the grid after all path updates
+            puzzle.grid(rowIndex)(columnIndex) = updatedBlock
           }
         }
       }
     }
-    return puzzle
+    puzzle
   }
   
   

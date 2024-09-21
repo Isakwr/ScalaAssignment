@@ -14,27 +14,35 @@ case class Block (
   }
 
   def updatePath(direction: Direction.Value, pathExists: Int): Block = {
-    copy(paths = paths.updated(direction, Some(pathExists)))
+    // Update only the specific direction, keep all others unchanged
+    val updatedPaths = paths.updated(direction, Some(pathExists))
+    copy(paths = updatedPaths)
   }
 
   def isFullyKnown: Boolean = state.isDefined && paths.values.forall(_.isDefined)
 
   override def toString: String = {
-    val blockState = state.map {
-      case 1 => "1"
-      case 0 => "0"
-      case _ => "?"
-    }.getOrElse("?")
+    state match {
+      case Some(1) =>
+        // Determine the path configuration
+        val isLeft = paths(Direction.Left).contains(1)
+        val isRight = paths(Direction.Right).contains(1)
+        val isUp = paths(Direction.Up).contains(1)
+        val isDown = paths(Direction.Down).contains(1)
 
-    val pathState = paths.map {
-      case (Direction.Left, Some(1)) => "<-"
-      case (Direction.Right, Some(1)) => "->"
-      case (Direction.Up, Some(1)) => "^"
-      case (Direction.Down, Some(1)) => "v"
-      case _ => "_"
-    }.mkString(" ")
-
-    s"Block: $blockState, Paths: $pathState"
+        // Return the appropriate symbol based on the paths
+        (isLeft, isRight, isUp, isDown) match {
+          case (true, true, false, false) => "═" // Left and Right
+          case (false, false, true, true) => "║" // Up and Down
+          case (false, true, false, true) => "╔" // Right and Down
+          case (true, false, false, true) => "╗" // Left and Down
+          case (false, true, true, false) => "╚" // Up and Right
+          case (true, false, true, false) => "╝" // Left and Up
+          case _ => "?" // Unknown or invalid configuration
+        }
+      case Some(0) => "0" // No track
+      case None => "_"   // Unknown state
+    }
   }
 }
 
@@ -116,13 +124,20 @@ object Puzzle {
       updatedPuzzle = completeColumn(updatedPuzzle)
       updatedPuzzle = fillCorner(updatedPuzzle)
     }
+
+    
     updatedPuzzle = connect(updatedPuzzle)
+    updatedPuzzle = connect(updatedPuzzle)
+    updatedPuzzle = connect(updatedPuzzle)
+
+
+    println(updatedPuzzle.grid(0)(0).paths)
 
     // remaining solving logic
 
     // create Solution object based on the updated puzzle grid
-    val solvedGrid = updatedPuzzle.grid.map(_.map(_.state.getOrElse(0).toString.charAt(0)))
-    println(solvedGrid)
+    val solvedGrid = updatedPuzzle.grid.map(_.map(_.toString.charAt(0)))
+    solvedGrid.foreach(row => println(row.mkString(" ")))
     Solution(solvedGrid)
   }
   
