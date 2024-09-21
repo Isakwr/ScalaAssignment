@@ -1,4 +1,4 @@
-import PuzzleChecker.{completeColumn, completeRow, extendParts, fillCorner, markNonTracksColumns, markNonTracksRows}
+import PuzzleChecker.{completeColumn, completeRow, connect, extendParts, fillCorner, markNonTracksColumns, markNonTracksRows}
 // Puzzle.scala
 
 object Direction extends Enumeration {
@@ -116,11 +116,13 @@ object Puzzle {
       updatedPuzzle = completeColumn(updatedPuzzle)
       updatedPuzzle = fillCorner(updatedPuzzle)
     }
+    updatedPuzzle = connect(updatedPuzzle)
 
     // remaining solving logic
 
     // create Solution object based on the updated puzzle grid
     val solvedGrid = updatedPuzzle.grid.map(_.map(_.state.getOrElse(0).toString.charAt(0)))
+    println(solvedGrid)
     Solution(solvedGrid)
   }
   

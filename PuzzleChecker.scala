@@ -182,7 +182,64 @@ object PuzzleChecker {
     puzzle
   }
 
+  def connect(puzzle: Puzzle): Puzzle = {
+    for((row, rowIndex) <- puzzle.grid.zipWithIndex){
+      for((block, columnIndex) <- row.zipWithIndex){
+        val neighbours: Array[(Int, Int, Int)] = Array(
+          (rowIndex, columnIndex - 1, 0), //left
+          (rowIndex - 1, columnIndex, 1), //Up
+          (rowIndex, columnIndex + 1, 2), //Right
+          (rowIndex + 1, columnIndex, 3), //Down
+        )
+        //count non pathable: some(0) or some(1) without exit to block
+        //count pathable: some(1) without direction or some(1) with exit to block
+        val notPathable: Int = 0
+        val pathable: Int = neighbours.count(neigh => {
+          if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+            if (puzzle.grid(neigh._1)(neigh._2).state.contains(0)) {
+              false
+            } else if (puzzle.grid(neigh._1)(neigh._2).state.contains(1)) {
+              //check is path is know or not
+              if (puzzle.grid(neigh._1)(neigh._2).isFullyKnown) {
+                if (neigh._3 == 0 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(1)) {
+                  true
+                } else if (neigh._3 == 1 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(1)) {
+                  true
+                } else if (neigh._3 == 2 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(1)) {
+                  true
+                } else if (neigh._3 == 3 && puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(1)) {
+                  true
+                } else
+                  false
+              } else
+                true
+            } else
+              false
+          }else false
+        })
+        if(pathable == 2){
+          for(neigh <- neighbours) {
+            if (inBounds(neigh._1, neigh._2, puzzle.size._1, puzzle.size._2)) {
+              if (neigh._3 == 0 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Right).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
+                block.updatePath(Direction.Left, 1)
+              }
+              if (neigh._3 == 1 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Down).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
+                block.updatePath(Direction.Up, 1)
+              }
+              if (neigh._3 == 2 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Left).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
+                block.updatePath(Direction.Right, 1)
+              }
+              if (neigh._3 == 3 && (puzzle.grid(neigh._1)(neigh._2).paths(Direction.Up).contains(1) || !puzzle.grid(neigh._1)(neigh._2).isFullyKnown)) {
+                block.updatePath(Direction.Down, 1)
+              }
 
+            }
+          }
+        }
+      }
+    }
+    return puzzle
+  }
   
   
   
