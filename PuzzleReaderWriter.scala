@@ -103,7 +103,7 @@ object PuzzleReaderWriter {
       }
 
       // construct the puzzle and add it to the list
-      puzzles = Puzzle((width, height), grid, rowClues.result(), columnClues) :: puzzles
+      puzzles = Puzzle((height, width), grid, rowClues.result(), columnClues) :: puzzles
     }
 
     puzzles.reverse
