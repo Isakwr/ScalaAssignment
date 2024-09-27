@@ -1,7 +1,7 @@
 @main def PuzzleSolver(): Unit = {
 
-  val inFile: String = "C:/Users/isakw/ikt212/ScalaAssignment/isakwr/ScalaAssignment/input.txt"
-  val outFile: String = "C:/Users/isakw/ikt212/ScalaAssignment/isakwr/ScalaAssignment/output.txt"
+  val inFile: String = "C:/Users/isakw/ikt212/latest/ScalaAssignment/input.txt"
+  val outFile: String = "C:/Users/isakw/ikt212/latest/ScalaAssignment/output.txt"
   
     // read all puzzles from the input file
     val puzzles = PuzzleReaderWriter.readPuzzles(inFile)

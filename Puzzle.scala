@@ -1,5 +1,5 @@
 import scala.collection.mutable.Set
-import PuzzleChecker.{completeColumn, completeRow, connect, extendParts, fillCorner, makeFullyKnown, markNonTracksColumns, markNonTracksRows}
+import PuzzleChecker.{completeColumn, completeRow, connect, extendParts, fillCorner, finishConnect, loopChecker, makeFullyKnown, markNonTracksColumns, markNonTracksRows}
 
 import java.io.PrintWriter
 import scala.collection.mutable
@@ -9,15 +9,15 @@ object Direction extends Enumeration {
 }
 
 case class Block (
-                 var state: Option[Int], // None for unkown, Some(1) for track, Some(0) for no track
-                 var paths: Map[Direction.Value, Option[Int]] // map of paths with binary representation
+                 var state: Option[Int], //none for unkown, Some(1) for track, Some(0) for no track
+                 var paths: Map[Direction.Value, Option[Int]] //map of paths with binary representation
                  ) {
   def updatedBlockState(trackExists: Int): Block = {
     copy(state = Some(trackExists))
   }
 
   def updatePath(direction: Direction.Value, pathExists: Int): Block = {
-    // Update only the specific direction, keep all others unchanged
+    //update only the specific direction, keep all others unchanged
     val updatedPaths = paths.updated(direction, Some(pathExists))
     copy(paths = updatedPaths)
   }
@@ -27,13 +27,13 @@ case class Block (
   override def toString: String = {
     state match {
       case Some(1) =>
-        // Determine the path configuration
+        //determine the path configuration
         val isLeft = paths(Direction.Left).contains(1)
         val isRight = paths(Direction.Right).contains(1)
         val isUp = paths(Direction.Up).contains(1)
         val isDown = paths(Direction.Down).contains(1)
 
-        // Return the appropriate symbol based on the paths
+        //return the appropriate symbol based on the paths
         (isLeft, isRight, isUp, isDown) match {
           case (true, true, false, false) => "═" // Left and Right
           case (false, false, true, true) => "║" // Up and Down
@@ -126,7 +126,7 @@ object Puzzle {
       updatedPuzzle = fillCorner(updatedPuzzle)
 
       if(copyPuzzle.grid sameElements updatedPuzzle.grid) {
-        for(i <- 0 until 10) {
+        for(i <- 0 until 30) {
           updatedPuzzle = markNonTracksRows(updatedPuzzle)
           updatedPuzzle = markNonTracksColumns(updatedPuzzle)
           updatedPuzzle = extendParts(updatedPuzzle)
@@ -149,11 +149,16 @@ object Puzzle {
       }
     }
 
-    updatedPuzzle = connect(updatedPuzzle)
-    updatedPuzzle = makeFullyKnown(updatedPuzzle)
-    updatedPuzzle = connect(updatedPuzzle)
-    updatedPuzzle = makeFullyKnown(updatedPuzzle)
-    updatedPuzzle = connect(updatedPuzzle)
+    for(i <- 0 until 50) {
+      updatedPuzzle = connect(updatedPuzzle)
+      updatedPuzzle = makeFullyKnown(updatedPuzzle)
+      updatedPuzzle = connect(updatedPuzzle)
+      updatedPuzzle = makeFullyKnown(updatedPuzzle)
+      updatedPuzzle = connect(updatedPuzzle)
+      updatedPuzzle = finishConnect(updatedPuzzle)
+      updatedPuzzle = makeFullyKnown(updatedPuzzle)
+      updatedPuzzle = connect(updatedPuzzle)
+    }
 
 
 
