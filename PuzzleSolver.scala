@@ -1,13 +1,10 @@
-// PuzzleSolver.scala
+@main def PuzzleSolver(): Unit = {
 
-@main
-def main(): Unit = {
-
-    val inputFile = "C:/Users/isakw/ikt212/ScalaAssignment/input.txt"
-    val outputFile = "C:/Users/isakw/ikt212/ScalaAssignment/output.txt"
-    
+  val inFile: String = "C:/Users/isakw/ikt212/ScalaAssignment/isakwr/ScalaAssignment/input.txt"
+  val outFile: String = "C:/Users/isakw/ikt212/ScalaAssignment/isakwr/ScalaAssignment/output.txt"
+  
     // read all puzzles from the input file
-    val puzzles = PuzzleReaderWriter.readPuzzles(inputFile)
+    val puzzles = PuzzleReaderWriter.readPuzzles(inFile)
 
     // solve each puzzle and gather the solutions
     val solutions = puzzles.map { puzzle =>
@@ -26,7 +23,6 @@ def main(): Unit = {
       Puzzle.solve(puzzle)
     }
 
-    // write all the solutions to the output file at once
-    PuzzleReaderWriter.writeSolution(outputFile, solutions)
+    PuzzleReaderWriter.writeSolution(outFile, solutions)
 }
 
